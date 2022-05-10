@@ -38,6 +38,7 @@ runs:
         BUCKET_NAME: ${{ inputs.bucketName }}
       run: |
         import boto3
+        import os
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(os.environ['BUCKET_NAME'])
         bucket.object_versions.delete()
