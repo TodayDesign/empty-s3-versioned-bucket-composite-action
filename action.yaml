@@ -1,15 +1,41 @@
 name: 'Hello World'
 description: 'Greet someone'
 inputs:
-  bucketName:  # id of input
-    description: 'Bucket to empty'
+  bucketName:  
+    description: 'AWS S3 Bucket to empty'
+    required: true
+  awsAccessKeyId:
+    description: 'AWS Access Key ID'
+    required: true
+  awsSecretAccessKey:
+    description: 'AWS Secret Access Key'
+    required: true
+  awsRoleArn:
+    description: 'AWS Role ARN'
+    required: true
+  awsSessionName:
+    description: 'AWS Session Name'
     required: true
 runs:
   using: "composite"
   steps:
-    - name: Inline python step
+    - name: Configure AWS S3 credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      if: steps.set-deploy-env.outputs.result != 'prod'
+      with:
+        aws-access-key-id: ${{ inputs.awsAccessKeyId }}
+        aws-secret-access-key: ${{ inputs.awsSecretAccessKey }}
+        aws-region: ap-southeast-2
+        role-to-assume: ${{ inputs.awsRoleArn }}
+        role-duration-seconds: 1800
+        role-session-name: staticbuild
+        role-skip-session-tagging: true
+    - name: Install boto3
+      shell: bash
+      run: pip3 install boto3
+    - name: Empty bucket
       env: 
-        BUCKET_NAME: 
+        BUCKET_NAME: ${{ inputs.bucketName }}
       run: |
         import boto3
         s3 = boto3.resource('s3')
